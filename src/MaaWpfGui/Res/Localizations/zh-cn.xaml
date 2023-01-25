@@ -168,7 +168,6 @@
     <system:String x:Key="NewVersionFoundButNoPackageTitle">检测到新版本，但未找到增量包</system:String>
     <system:String x:Key="NewVersionFoundButNoPackageDesc">请手动下载完整包更新！</system:String>
 
-    <system:String x:Key="TimerTip">仅填写小时数，将在整点时执行</system:String>
     <system:String x:Key="Timer">定时</system:String>
 
     <system:String x:Key="LaunchOnSystemStartup">开机自动启动</system:String>
@@ -253,7 +252,7 @@
     <system:String x:Key="ExitSelf">退出 MAA</system:String>
     <system:String x:Key="ExitEmulator">退出 模拟器</system:String>
     <system:String x:Key="ExitEmulatorAndSelf">退出 MAA 和 模拟器</system:String>
-    <system:String x:Key="ExitEmulatorAndSelfAndHibernate">退出 MAA 和 模拟器，并休眠*</system:String>
+    <system:String x:Key="ExitEmulatorAndSelfAndHibernate">退出 MAA 和 模拟器，并休眠</system:String>
     <system:String x:Key="Hibernate">休眠</system:String>
     <system:String x:Key="Shutdown">关机</system:String>
 

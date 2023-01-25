@@ -76,18 +76,25 @@ namespace MaaWpfGui
         {
             get
             {
-                if (Enum.TryParse(_actionAfterCompleted, out ActionType action))
+                if (!Enum.TryParse(_actionAfterCompleted, out ActionType action))
                 {
-                    return action;
+                    return ActionType.DoNothing;
                 }
 
-                return ActionType.DoNothing;
+                return action;
             }
 
             set
             {
                 string storeValue = value.ToString();
                 SetAndNotify(ref _actionAfterCompleted, storeValue);
+
+                if (value == ActionType.HibernateWithoutPersist || value == ActionType.ExitEmulatorAndSelfAndHibernateWithoutPersist
+                    || value == ActionType.ShutdownWithoutPersist)
+                {
+                    storeValue = ActionType.DoNothing.ToString();
+                }
+
                 ViewStatusStorage.Set("MainFunction.ActionAfterCompleted", storeValue);
             }
         }
@@ -153,14 +160,19 @@ namespace MaaWpfGui
             int intMinute = DateTime.Now.Minute;
             int intHour = DateTime.Now.Hour;
             var settings = _container.Get<SettingsViewModel>();
-            if ((settings.Timer1 && settings.Timer1Hour == intHour && settings.Timer1Min == intMinute) ||
-                (settings.Timer2 && settings.Timer2Hour == intHour && settings.Timer2Min == intMinute) ||
-                (settings.Timer3 && settings.Timer3Hour == intHour && settings.Timer3Min == intMinute) ||
-                (settings.Timer4 && settings.Timer4Hour == intHour && settings.Timer4Min == intMinute) ||
-                (settings.Timer5 && settings.Timer5Hour == intHour && settings.Timer5Min == intMinute) ||
-                (settings.Timer6 && settings.Timer6Hour == intHour && settings.Timer6Min == intMinute) ||
-                (settings.Timer7 && settings.Timer7Hour == intHour && settings.Timer7Min == intMinute) ||
-                (settings.Timer8 && settings.Timer8Hour == intHour && settings.Timer8Min == intMinute))
+            var timeToStart = false;
+            for (int i = 0; i < 8; ++i)
+            {
+                if (settings.TimerModels.Timers[i].IsOn &&
+                    settings.TimerModels.Timers[i].Hour == intHour &&
+                    settings.TimerModels.Timers[i].Min == intMinute)
+                {
+                    timeToStart = true;
+                    break;
+                }
+            }
+
+            if (timeToStart)
             {
                 LinkStart();
             }
@@ -193,6 +205,10 @@ namespace MaaWpfGui
                 new GenericCombData<ActionType> { Display = Localization.GetString("ExitEmulatorAndSelfAndHibernate"), Value = ActionType.ExitEmulatorAndSelfAndHibernate },
                 new GenericCombData<ActionType> { Display = Localization.GetString("Hibernate"), Value = ActionType.Hibernate },
                 new GenericCombData<ActionType> { Display = Localization.GetString("Shutdown"), Value = ActionType.Shutdown },
+                
+                // new GenericCombData<ActionType> { Display = Localization.GetString("ExitEmulatorAndSelfAndHibernate") + "*", Value = ActionType.ExitEmulatorAndSelfAndHibernateWithoutPersist },
+                new GenericCombData<ActionType> { Display = Localization.GetString("Hibernate") + "*", Value = ActionType.HibernateWithoutPersist },
+                new GenericCombData<ActionType> { Display = Localization.GetString("Shutdown") + "*", Value = ActionType.ShutdownWithoutPersist },
             };
             var temp_order_list = new List<DragItemViewModel>(new DragItemViewModel[task_list.Length]);
             var non_order_list = new List<DragItemViewModel>();
@@ -1106,6 +1122,21 @@ namespace MaaWpfGui
             /// Computer shutdown.
             /// </summary>
             Shutdown,
+
+            /// <summary>
+            /// Computer hibernates without Persist.
+            /// </summary>
+            HibernateWithoutPersist,
+
+            /// <summary>
+            /// Exits MAA and emulator and computer hibernates without Persist.
+            /// </summary>
+            ExitEmulatorAndSelfAndHibernateWithoutPersist,
+
+            /// <summary>
+            /// Computer shutdown without Persist.
+            /// </summary>
+            ShutdownWithoutPersist,
         }
 
         /// <summary>
@@ -1155,6 +1186,7 @@ namespace MaaWpfGui
                     break;
 
                 case ActionType.Shutdown:
+                case ActionType.ShutdownWithoutPersist:
                     Process.Start("shutdown.exe", "-s -t 60");
 
                     // 关机询问
@@ -1173,6 +1205,7 @@ namespace MaaWpfGui
                     break;
 
                 case ActionType.Hibernate:
+                case ActionType.HibernateWithoutPersist:
                     // 休眠提示
                     AddLog(Localization.GetString("HibernatePrompt"), UILogColor.Error);
 
@@ -1181,6 +1214,7 @@ namespace MaaWpfGui
                     break;
 
                 case ActionType.ExitEmulatorAndSelfAndHibernate:
+                case ActionType.ExitEmulatorAndSelfAndHibernateWithoutPersist:
                     if (!KillEumlatorbyWindow())
                     {
                         AddLog(Localization.GetString("ExitEmulatorFailed"), UILogColor.Error);
